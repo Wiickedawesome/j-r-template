@@ -3,7 +3,9 @@
 	"name": "j-r-template",
 	"main": "./src/worker/index.ts",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -15,7 +17,7 @@
 	"kv_namespaces": [
 		{
 			"binding": "DATA_KV",
-			"id": "<replace-with-production-kv-id>",
+			"id": "87bac97bee914e12b58f0b661917eece",
 			"preview_id": "<replace-with-preview-kv-id>"
 		}
 	]

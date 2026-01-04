@@ -1,66 +1,66 @@
 // src/App.tsx
 
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
-import honoLogo from "./assets/hono.svg";
+import { useEffect, useState } from "react";
 import "./App.css";
+import { AdminPanel } from "./components/AdminPanel";
+import { Landing } from "./components/Landing";
+import { RewardsPanel } from "./components/RewardsPanel";
+import { BottomNav } from "./components/BottomNav";
+import { Footer } from "./components/Footer";
+import { TopBar } from "./components/TopBar";
+import { StoreProvider, useStore } from "./store";
+import { View } from "./types";
 
-function App() {
-	const [count, setCount] = useState(0);
-	const [name, setName] = useState("unknown");
+function AppShell() {
+	const [view, setView] = useState<View>("shop");
+	const {
+		state: { adminSession, rewardProfile },
+	} = useStore();
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const readView = () => {
+			const hash = window.location.hash.replace("#", "");
+			if (hash === "admin" || hash === "shop" || hash === "rewards") {
+				setView(hash as View);
+			}
+		};
+		readView();
+		window.addEventListener("hashchange", readView);
+		return () => window.removeEventListener("hashchange", readView);
+	}, []);
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const currentHash = window.location.hash.replace("#", "");
+		if (currentHash !== view) {
+			window.location.hash = view;
+		}
+	}, [view]);
 
 	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-				<a href="https://hono.dev/" target="_blank">
-					<img src={honoLogo} className="logo cloudflare" alt="Hono logo" />
-				</a>
-				<a href="https://workers.cloudflare.com/" target="_blank">
-					<img
-						src={cloudflareLogo}
-						className="logo cloudflare"
-						alt="Cloudflare logo"
-					/>
-				</a>
-			</div>
-			<h1>Vite + React + Hono + Cloudflare</h1>
-			<div className="card">
-				<button
-					onClick={() => setCount((count) => count + 1)}
-					aria-label="increment"
-				>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<div className="card">
-				<button
-					onClick={() => {
-						fetch("/api/")
-							.then((res) => res.json() as Promise<{ name: string }>)
-							.then((data) => setName(data.name));
-					}}
-					aria-label="get name"
-				>
-					Name from API is: {name}
-				</button>
-				<p>
-					Edit <code>worker/index.ts</code> to change the name
-				</p>
-			</div>
-			<p className="read-the-docs">Click on the logos to learn more</p>
-		</>
+		<div className="layout">
+			<TopBar
+				view={view}
+				onChangeView={setView}
+				adminEmail={adminSession?.email}
+				rewardName={rewardProfile?.name}
+			/>
+			<main>
+				{view === "shop" && <Landing onAdminRequest={() => setView("admin")} />}
+				{view === "admin" && <AdminPanel />}
+				{view === "rewards" && <RewardsPanel />}
+				<Footer onAdmin={() => setView("admin")} />
+			</main>
+			<BottomNav view={view} onChange={setView} />
+		</div>
 	);
 }
 
-export default App;
+export default function App() {
+	return (
+		<StoreProvider>
+			<AppShell />
+		</StoreProvider>
+	);
+}
